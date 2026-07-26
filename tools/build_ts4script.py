@@ -36,10 +36,14 @@ def main():
 
     if os.path.exists(BUILD):
         shutil.rmtree(BUILD)
-    os.makedirs(BUILD)
+    os.makedirs(os.path.dirname(BUILD), exist_ok=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
-    shutil.copytree(SRC, BUILD, dirs_exist_ok=True)
+    shutil.copytree(
+        SRC,
+        BUILD,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+    )
     ok = compileall.compile_dir(BUILD, quiet=1, force=True, legacy=True)
     if not ok:
         raise SystemExit("Bytecode compilation failed")

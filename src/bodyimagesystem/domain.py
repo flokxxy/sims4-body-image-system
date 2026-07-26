@@ -3,6 +3,10 @@
 from enum import Enum
 
 
+# Provisional balance value from the specification; adjust after playtesting.
+APPEARANCE_FOCUSED_ESTEEM_MULTIPLIER = 1.5
+
+
 class Axis(str, Enum):
     FAT = "fat"
     FIT = "fit"
@@ -63,6 +67,17 @@ def magnitude_from_delta(delta, appearance_focused=False):
     return Magnitude.SHARP
 
 
+def adjusted_esteem_delta(delta, appearance_focused=False):
+    """Apply personality modifiers to a resolver self-esteem delta.
+
+    The multiplier is intentionally kept in the pure domain layer so it can be
+    balanced and tested without importing any Sims 4 modules.
+    """
+    if appearance_focused:
+        return delta * APPEARANCE_FOCUSED_ESTEEM_MULTIPLIER
+    return delta
+
+
 def direction_from_delta(delta):
     if delta > 0:
         return Direction.UP
@@ -90,4 +105,3 @@ def relation_to_goal(goal, axis, direction):
     if direction == target[1]:
         return RelationToGoal.PROGRESS
     return RelationToGoal.REGRESS
-
