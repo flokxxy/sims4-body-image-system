@@ -39,3 +39,39 @@ flokxxy:BodyImageSystem:trait_BIS_AppearanceFocused:description
 
 Description FNV32:
 AB9D253D
+
+
+
+
+## trait_BIS_Goal_LoseWeight 
+name source:
+flokxxy:BodyImageSystem:trait_BIS_Goal_LoseWeight
+
+Name FNV32: 80A37607
+
+Instance Decimal: 2158196231
+
+
+Name:
+flokxxy:BodyImageSystem:trait_BIS_Goal_GainWeight
+
+Name FNV32: E82B728D
+
+Instance Decimal:  3895161485
+
+
+Name:
+flokxxy:BodyImageSystem:trait_BIS_Goal_GainMuscle
+
+Name FNV32: C37BC038
+
+Decimal: 3279667256
+
+
+Name:
+flokxxy:BodyImageSystem:trait_BIS_Goal_Maintain
+
+Name FNV32: C1D975C3
+
+Decimal: 3252254147
+
