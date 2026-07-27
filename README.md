@@ -15,6 +15,8 @@ This repository contains the first script-side scaffold for the MVP:
 - unit tests for the pure logic in `tests/`.
 - a working English/Russian `trait_BIS_AppearanceFocused` resource in
   `s4s/BodyImageSystem.package`, wired to the script by its Instance ID.
+- four hidden Teen–Elder body-goal traits in `s4s/BodyImageSystem.package`,
+  all wired to the script by their Instance IDs.
 
 Before in-game testing, create the required `.package` resources in Sims 4 Studio
 and replace the remaining placeholder `0x0000000000000000` values in
@@ -27,8 +29,9 @@ Create these first:
 - `statistic_BIS_SelfEsteem`
 - `statistic_BIS_FatSnapshot` with default value `-999`
 - `statistic_BIS_FitSnapshot` with default value `-999`
-- `trait_BIS_Goal_LoseWeight`
+- `statistic_BIS_StagnationDays` with default value `0`
 - `buff_BIS_Test_Progress`
+- `buff_BIS_Stagnation`
 
 Also verify the built-in resource IDs for `commodity_Fat` and `commodity_Fit`
 against the current decompiled game tuning.

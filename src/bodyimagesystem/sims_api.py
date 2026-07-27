@@ -8,6 +8,14 @@ from bodyimagesystem import tuning
 from bodyimagesystem.domain import Goal
 
 
+GOAL_TRAIT_PRIORITY = (
+    (tuning.TRAIT_GOAL_LOSE_WEIGHT, Goal.LOSE_WEIGHT),
+    (tuning.TRAIT_GOAL_GAIN_WEIGHT, Goal.GAIN_WEIGHT),
+    (tuning.TRAIT_GOAL_GAIN_MUSCLE, Goal.GAIN_MUSCLE),
+    (tuning.TRAIT_GOAL_MAINTAIN, Goal.MAINTAIN),
+)
+
+
 def get_instance_manager(resource_type):
     import services
 
@@ -77,13 +85,12 @@ def has_trait(sim_info, trait_id):
 
 
 def current_goal(sim_info):
-    if has_trait(sim_info, tuning.TRAIT_GOAL_LOSE_WEIGHT):
-        return Goal.LOSE_WEIGHT
-    if has_trait(sim_info, tuning.TRAIT_GOAL_GAIN_WEIGHT):
-        return Goal.GAIN_WEIGHT
-    if has_trait(sim_info, tuning.TRAIT_GOAL_GAIN_MUSCLE):
-        return Goal.GAIN_MUSCLE
-    if has_trait(sim_info, tuning.TRAIT_GOAL_MAINTAIN):
-        return Goal.MAINTAIN
-    return Goal.NONE
+    """Return the active body goal, with deterministic conflict handling.
 
+    Goal-setting code must keep these traits mutually exclusive. The explicit
+    priority is only a defensive fallback for saves containing multiple goals.
+    """
+    for trait_id, goal in GOAL_TRAIT_PRIORITY:
+        if has_trait(sim_info, trait_id):
+            return goal
+    return Goal.NONE

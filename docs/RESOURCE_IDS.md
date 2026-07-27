@@ -1,33 +1,39 @@
 ## trait_BIS_AppearanceFocused
+
 Hash source:
 flokxxy:BodyImageSystem:trait_BIS_AppearanceFocused
 
-FNV64 HEX:
+Hash source FNV64 HEX:
 A8F4EDC9F71B05B9
 
-FNV64 DECIMAL:
+Hash source FNV64 DECIMAL:
 12174617144379246009
 
-FNV32 HEX: D4BB0699
-FNV32 DECIMAL: 3569026713
+Package Instance HEX:
+00000000D4BB0699
+
+Package Instance DECIMAL:
+3569026713
 
 ## BodyImageSystem STBL
+
 Hash source:
 flokxxy:BodyImageSystem:STBL
 
 FNV64 HEX:
 57E5C60F0EB6EFA5
+
 English STBL Instance:
 00E5C60F0EB6EFA5
+
 Russian STBL Instance:
 12E5C60F0EB6EFA5
-
 
 FNV64 DECIMAL:
 6333686218940149669
 
-
 ## trait_BIS_AppearanceFocused strings
+
 Name source:
 flokxxy:BodyImageSystem:trait_BIS_AppearanceFocused:name
 
@@ -40,38 +46,46 @@ flokxxy:BodyImageSystem:trait_BIS_AppearanceFocused:description
 Description FNV32:
 AB9D253D
 
+## trait_BIS_Goal_LoseWeight
 
-
-
-## trait_BIS_Goal_LoseWeight 
-name source:
+Hash source:
 flokxxy:BodyImageSystem:trait_BIS_Goal_LoseWeight
 
-Name FNV32: 80A37607
+Package Instance HEX:
+0000000080A37607
 
-Instance Decimal: 2158196231
+Package Instance DECIMAL:
+2158196231
 
+## trait_BIS_Goal_GainWeight
 
-Name:
+Hash source:
 flokxxy:BodyImageSystem:trait_BIS_Goal_GainWeight
 
-Name FNV32: E82B728D
+Package Instance HEX:
+00000000E82B728D
 
-Instance Decimal:  3895161485
+Package Instance DECIMAL:
+3895161485
 
+## trait_BIS_Goal_GainMuscle
 
-Name:
+Hash source:
 flokxxy:BodyImageSystem:trait_BIS_Goal_GainMuscle
 
-Name FNV32: C37BC038
+Package Instance HEX:
+00000000C37BC038
 
-Decimal: 3279667256
+Package Instance DECIMAL:
+3279667256
 
+## trait_BIS_Goal_Maintain
 
-Name:
+Hash source:
 flokxxy:BodyImageSystem:trait_BIS_Goal_Maintain
 
-Name FNV32: C1D975C3
+Package Instance HEX:
+00000000C1D975C3
 
-Decimal: 3252254147
-
+Package Instance DECIMAL:
+3252254147
