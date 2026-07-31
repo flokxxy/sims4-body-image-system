@@ -12,6 +12,9 @@ from bodyimagesystem.domain import Goal, Magnitude, magnitude_from_delta
 
 
 STAGNATION_DAYS_REQUIRED = 3
+# Provisional balance value; keep separate from the state machine transition so
+# it can be tuned after the first in-game playtest.
+STAGNATION_ESTEEM_DELTA = -1
 DIRECTED_GOALS = frozenset(
     (Goal.LOSE_WEIGHT, Goal.GAIN_WEIGHT, Goal.GAIN_MUSCLE)
 )

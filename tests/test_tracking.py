@@ -10,18 +10,23 @@ from bodyimagesystem.domain import (
     RelationToGoal,
 )
 from bodyimagesystem.resolver import Reaction
+from bodyimagesystem.stagnation import (
+    STAGNATION_ESTEEM_DELTA,
+    StagnationStatus,
+)
 
 
 def make_sample(
     axis,
     delta,
+    goal=Goal.MAINTAIN,
     relation=RelationToGoal.VIOLATION,
     magnitude=Magnitude.NOTICEABLE,
 ):
     return tracking.AxisSample(
         axis,
         delta,
-        Goal.MAINTAIN,
+        goal,
         relation,
         magnitude,
         Reaction("test.key", -1, "test"),
@@ -30,6 +35,63 @@ def make_sample(
 
 
 class TrackingTests(unittest.TestCase):
+    def test_first_snapshot_creates_baseline_for_both_axes(self):
+        sim_info = object()
+
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            side_effect=[50, 25, -10, -999, -999],
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value:
+            state = tracking.ensure_initial_state(sim_info)
+
+        self.assertTrue(state.ready)
+        self.assertTrue(state.baseline_created)
+        self.assertEqual(
+            set_statistic_value.call_args_list,
+            [
+                mock.call(sim_info, tuning.STATISTIC_FAT_SNAPSHOT, 25),
+                mock.call(sim_info, tuning.STATISTIC_FIT_SNAPSHOT, -10),
+            ],
+        )
+
+    def test_existing_snapshots_do_not_recreate_baseline(self):
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            side_effect=[50, 25, -10, 20, -8],
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value:
+            state = tracking.ensure_initial_state(object())
+
+        self.assertTrue(state.ready)
+        self.assertFalse(state.baseline_created)
+        set_statistic_value.assert_not_called()
+
+    def test_baseline_tick_skips_reactions_and_stagnation(self):
+        sim_info = mock.Mock(is_selectable=True)
+
+        with mock.patch.object(
+            tracking,
+            "ensure_initial_state",
+            return_value=tracking.InitializationState(True, True),
+        ), mock.patch.object(
+            tracking,
+            "_sampling_context",
+        ) as sampling_context, mock.patch.object(
+            tracking,
+            "_update_stagnation",
+        ) as update_stagnation:
+            tracking.sample_sim(sim_info)
+
+        sampling_context.assert_not_called()
+        update_stagnation.assert_not_called()
+
     def test_zero_self_esteem_is_read_as_low_tier(self):
         sim_info = object()
 
@@ -146,6 +208,164 @@ class TrackingTests(unittest.TestCase):
         selected = tracking._select_samples_to_apply([progress, irrelevant])
 
         self.assertEqual(selected, [progress, irrelevant])
+
+
+class StagnationIntegrationTests(unittest.TestCase):
+    def setUp(self):
+        self.sim_info = object()
+        self.context = tracking.SamplingContext(
+            Goal.GAIN_WEIGHT,
+            EsteemTier.NEUTRAL,
+            False,
+        )
+
+    def test_no_progress_increments_persisted_counter(self):
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            return_value=0,
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value, mock.patch.object(
+            tracking.sims_api,
+            "add_buff",
+        ) as add_buff, mock.patch.object(
+            tracking.sims_api,
+            "add_statistic_value",
+        ) as add_statistic_value:
+            update = tracking._update_stagnation(
+                self.sim_info,
+                self.context,
+                [],
+            )
+
+        self.assertEqual(update.status, StagnationStatus.COUNTING)
+        self.assertEqual(update.days_without_progress, 1)
+        set_statistic_value.assert_called_once_with(
+            self.sim_info,
+            tuning.STATISTIC_STAGNATION_DAYS,
+            1,
+        )
+        add_buff.assert_not_called()
+        add_statistic_value.assert_not_called()
+
+    def test_meaningful_progress_resets_persisted_counter(self):
+        progress = make_sample(
+            Axis.FAT,
+            5,
+            goal=Goal.GAIN_WEIGHT,
+            relation=RelationToGoal.PROGRESS,
+        )
+
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            return_value=2,
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value, mock.patch.object(
+            tracking.sims_api,
+            "add_buff",
+        ) as add_buff:
+            update = tracking._update_stagnation(
+                self.sim_info,
+                self.context,
+                [progress],
+            )
+
+        self.assertEqual(update.status, StagnationStatus.PROGRESS)
+        set_statistic_value.assert_called_once_with(
+            self.sim_info,
+            tuning.STATISTIC_STAGNATION_DAYS,
+            0,
+        )
+        add_buff.assert_not_called()
+
+    def test_third_day_resets_counter_and_applies_stagnation_effect(self):
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            return_value=2,
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value, mock.patch.object(
+            tracking.sims_api,
+            "add_buff",
+        ) as add_buff, mock.patch.object(
+            tracking.sims_api,
+            "add_statistic_value",
+        ) as add_statistic_value:
+            update = tracking._update_stagnation(
+                self.sim_info,
+                self.context,
+                [],
+            )
+
+        self.assertEqual(update.status, StagnationStatus.TRIGGERED)
+        self.assertTrue(update.triggered)
+        set_statistic_value.assert_called_once_with(
+            self.sim_info,
+            tuning.STATISTIC_STAGNATION_DAYS,
+            0,
+        )
+        add_buff.assert_called_once_with(
+            self.sim_info,
+            tuning.BUFF_STAGNATION,
+        )
+        add_statistic_value.assert_called_once_with(
+            self.sim_info,
+            tuning.STATISTIC_SELF_ESTEEM,
+            STAGNATION_ESTEEM_DELTA,
+        )
+
+    def test_paused_stagnation_preserves_counter(self):
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            return_value=2,
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value, mock.patch.object(
+            tracking.sims_api,
+            "add_buff",
+        ) as add_buff:
+            update = tracking._update_stagnation(
+                self.sim_info,
+                self.context,
+                [],
+                paused=True,
+            )
+
+        self.assertEqual(update.status, StagnationStatus.PAUSED)
+        self.assertEqual(update.days_without_progress, 2)
+        set_statistic_value.assert_not_called()
+        add_buff.assert_not_called()
+
+    def test_missing_counter_skips_stagnation(self):
+        with mock.patch.object(
+            tracking.sims_api,
+            "get_statistic_value",
+            return_value=None,
+        ), mock.patch.object(
+            tracking.sims_api,
+            "set_statistic_value",
+        ) as set_statistic_value, mock.patch.object(
+            tracking.sims_api,
+            "add_buff",
+        ) as add_buff:
+            update = tracking._update_stagnation(
+                self.sim_info,
+                self.context,
+                [],
+            )
+
+        self.assertIsNone(update)
+        set_statistic_value.assert_not_called()
+        add_buff.assert_not_called()
 
 
 class TuningMappingTests(unittest.TestCase):

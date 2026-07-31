@@ -19,6 +19,14 @@ def install():
     log("startup installed")
 
     try:
+        from bodyimagesystem import debug_commands
+
+        debug_commands.install()
+        log("temporary debug commands installed")
+    except Exception as exc:
+        log_exception("Could not install temporary debug commands", exc)
+
+    try:
         _install_zone_spin_up_hook()
     except Exception as exc:
         log_exception("Could not install zone spin-up hook", exc)
@@ -61,7 +69,27 @@ def setup_sim_alarm(sim_info):
         import alarms
         import date_and_time
 
-        from bodyimagesystem.tracking import sample_sim
+        from bodyimagesystem.tracking import (
+            ensure_initial_state,
+            is_in_scope,
+            sample_sim,
+        )
+
+        if not is_in_scope(sim_info):
+            return
+
+        initialization = ensure_initial_state(sim_info)
+        if not initialization.ready:
+            log(
+                "Could not initialize body snapshot baseline for sim_id={0}"
+                .format(sim_info.sim_id)
+            )
+        elif initialization.baseline_created:
+            log(
+                "body snapshot baseline initialized for sim_id={0}".format(
+                    sim_info.sim_id
+                )
+            )
 
         def _run_alarm(_alarm_handle):
             sample_sim(sim_info)

@@ -15,10 +15,18 @@ from bodyimagesystem.domain import (
 )
 from bodyimagesystem.logger import log, log_exception
 from bodyimagesystem.resolver import get_reaction
+from bodyimagesystem.stagnation import (
+    STAGNATION_ESTEEM_DELTA,
+    advance_stagnation,
+)
 
 
 SNAPSHOT_UNSET = -999
 
+InitializationState = namedtuple(
+    "InitializationState",
+    ("ready", "baseline_created"),
+)
 SamplingContext = namedtuple("SamplingContext", ("goal", "esteem_tier", "focused"))
 AxisSample = namedtuple(
     "AxisSample",
@@ -39,23 +47,26 @@ def is_in_scope(sim_info):
 
 
 def ensure_initial_state(sim_info):
-    """Seed custom statistics from current body values when first seen."""
+    """Seed body baselines and report whether this is the first sample."""
     self_esteem = sims_api.get_statistic_value(sim_info, tuning.STATISTIC_SELF_ESTEEM)
     if self_esteem is None:
-        return False
+        return InitializationState(False, False)
 
     fat = sims_api.get_statistic_value(sim_info, tuning.COMMODITY_FAT)
     fit = sims_api.get_statistic_value(sim_info, tuning.COMMODITY_FIT)
     if fat is None or fit is None:
-        return False
+        return InitializationState(False, False)
 
     fat_snapshot = sims_api.get_statistic_value(sim_info, tuning.STATISTIC_FAT_SNAPSHOT)
     fit_snapshot = sims_api.get_statistic_value(sim_info, tuning.STATISTIC_FIT_SNAPSHOT)
+    baseline_created = False
     if fat_snapshot == SNAPSHOT_UNSET:
         sims_api.set_statistic_value(sim_info, tuning.STATISTIC_FAT_SNAPSHOT, fat)
+        baseline_created = True
     if fit_snapshot == SNAPSHOT_UNSET:
         sims_api.set_statistic_value(sim_info, tuning.STATISTIC_FIT_SNAPSHOT, fit)
-    return True
+        baseline_created = True
+    return InitializationState(True, baseline_created)
 
 
 def _sampling_context(sim_info):
@@ -79,8 +90,12 @@ def sample_sim(sim_info):
         return
 
     try:
-        if not ensure_initial_state(sim_info):
+        initialization = ensure_initial_state(sim_info)
+        if not initialization.ready:
             log("Skipped sim; tuning statistics are missing or unavailable")
+            return
+        if initialization.baseline_created:
+            log("Initialized body snapshot baseline; reactions start next window")
             return
 
         context = _sampling_context(sim_info)
@@ -120,6 +135,8 @@ def sample_sim(sim_info):
                         sample.relation.value,
                     )
                 )
+
+        _update_stagnation(sim_info, context, samples)
     except Exception as exc:
         log_exception("Failed to sample sim", exc)
 
@@ -200,3 +217,55 @@ def _apply_sample(sim_info, sample):
             sample.esteem_delta,
         )
     )
+
+
+def _axis_delta(samples, axis):
+    for sample in samples:
+        if sample.axis == axis:
+            return sample.delta
+    return 0
+
+
+def _update_stagnation(sim_info, context, samples, paused=False):
+    """Persist one daily stagnation transition and apply its trigger effect."""
+    current_days = sims_api.get_statistic_value(
+        sim_info,
+        tuning.STATISTIC_STAGNATION_DAYS,
+    )
+    if current_days is None:
+        log("Skipped stagnation; counter statistic is unavailable")
+        return None
+
+    update = advance_stagnation(
+        current_days,
+        context.goal,
+        _axis_delta(samples, Axis.FAT),
+        _axis_delta(samples, Axis.FIT),
+        appearance_focused=context.focused,
+        paused=paused,
+    )
+
+    if update.days_without_progress != current_days:
+        sims_api.set_statistic_value(
+            sim_info,
+            tuning.STATISTIC_STAGNATION_DAYS,
+            update.days_without_progress,
+        )
+
+    if update.triggered:
+        sims_api.add_buff(sim_info, tuning.BUFF_STAGNATION)
+        sims_api.add_statistic_value(
+            sim_info,
+            tuning.STATISTIC_SELF_ESTEEM,
+            STAGNATION_ESTEEM_DELTA,
+        )
+
+    log(
+        "stagnation goal={0} status={1} days={2} triggered={3}".format(
+            context.goal.value,
+            update.status.value,
+            update.days_without_progress,
+            update.triggered,
+        )
+    )
+    return update

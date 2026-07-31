@@ -103,7 +103,7 @@ CDE0665B
 FNV32 DECIMAL:
 3454035547
 
-## statistic_BIS_SelfEsteem
+## statistic_BIS_FatSnapshot
 
 hash source:
 flokxxy:BodyImageSystem:statistic_BIS_FatSnapshot
@@ -115,15 +115,15 @@ FNV32 DECIMAL:
 2927452663
 
 
-## FitSnapshot
+## statistic_BIS_FitSnapshot
 HEX: 8926D7AF
 DEC: 2301024175
 
-## StagnationCounter
+## statistic_BIS_StagnationCounter
 HEX: CE0CDD56
 DEC: 3456949590
 
-## GoalAchievementNotified
+## statistic_BIS_GoalAchievementNotified
 HEX: C06C893C
 DEC: 3228338492
 
