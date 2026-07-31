@@ -126,3 +126,59 @@ DEC: 3456949590
 ## GoalAchievementNotified
 HEX: C06C893C
 DEC: 3228338492
+
+
+## buff_BIS_Test_Progress
+
+flokxxy:BodyImageSystem:buff_BIS_Test_Progress
+FNV32 HEX: C0F3A961
+FNV32 DECIMAL: 3237194081
+
+## for text
+flokxxy:BodyImageSystem:buff_BIS_Test_Progress:name
+FNV32: C5F1FEF0
+
+flokxxy:BodyImageSystem:buff_BIS_Test_Progress:description
+FNV32: 861862D5
+
+
+## buff_BIS_Stagnation
+flokxxy:BodyImageSystem:buff_BIS_Stagnation
+FNV32 HEX: EE3B5EF1
+FNV32 DECIMAL: 3996868337
+
+
+## for text
+
+flokxxy:BodyImageSystem:buff_BIS_Stagnation:name
+FNV32: B6725580
+
+flokxxy:BodyImageSystem:buff_BIS_Stagnation:description
+FNV32: 972B8185
+
+
+## ID commodity_Fat and commodity_Fit
+## EA body commodities
+
+### commodity_Fitness_Fat
+
+Tuning name:
+commodity_Fitness_Fat
+
+Tuning ID Decimal:
+16589
+
+Instance HEX:
+00000000000040CD
+
+
+### commodity_Fitness_Fit
+
+Tuning name:
+commodity_Fitness_Fit
+
+Tuning ID Decimal:
+16590
+
+Instance HEX:
+00000000000040CE
