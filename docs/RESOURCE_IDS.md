@@ -87,10 +87,10 @@ flokxxy:BodyImageSystem:trait_BIS_Goal_Maintain
 Package Instance HEX:
 00000000C1D975C3
 
-<<<<<<< HEAD
+
 Package Instance DECIMAL:
 3252254147
-=======
+
 
 ## statistic_BIS_SelfEsteem
 
@@ -102,4 +102,14 @@ CDE0665B
 
 FNV32 DECIMAL:
 3454035547
->>>>>>> d049900 (Add persistent self-esteem commodity)
+
+## statistic_BIS_SelfEsteem
+
+hash source:
+flokxxy:BodyImageSystem:statistic_BIS_FatSnapshot
+
+FNV32 HEX:
+AE7D61F7
+
+FNV32 DECIMAL:
+2927452663
